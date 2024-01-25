@@ -1,12 +1,11 @@
 import 'dart:convert';
 
+import 'package:provider/provider.dart';
 import 'package:sql/db/functions/db_functions.dart';
 import 'package:sql/db/model/data_model.dart';
 import 'package:flutter/material.dart';
-// import 'package:sql/screens/screen_home.dart';
+import 'package:sql/provider/db_list_provider.dart';
 import 'package:sql/screens/widgets/details_student.dart';
-
-List<Map<String, Object?>> dataListMap = [];
 
 ImageProvider imageProcessor(image) {
   final ImageProvider newImage;
@@ -16,21 +15,21 @@ ImageProvider imageProcessor(image) {
   return newImage;
 }
 
+List<Map<String, Object?>> dataListMap = [];
+
 class ListStudentWidget extends StatelessWidget {
   final bool isListOn;
   const ListStudentWidget({super.key, required this.isListOn});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: studentListNotifier,
-      builder:
-          (BuildContext ctx, List<StudentModel> studentList, Widget? child) {
+    return Consumer<StudentProvider>(
+      builder: (BuildContext ctx, studentProvider, Widget? child) {
         dataListMap.clear();
         if (isListOn) {
           return ListView.separated(
               itemBuilder: (ctx, index) {
-                final data = studentList[index];
+                final data = studentProvider.studentList[index];
                 dataListMap.add({'name': data.name, 'admno': data.admno});
                 return Card(
                   color: Colors.blueGrey,
@@ -53,57 +52,6 @@ class ListStudentWidget extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w700),
                     ),
-                    // subtitle: Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //   children: [
-                    //     Row(
-                    //       children: [
-                    //         Text(
-                    //           'Name: ${data.name}',
-                    //           style: const TextStyle(
-                    //               color: Colors.black,
-                    //               fontSize: 16,
-                    //               fontWeight: FontWeight.w700),
-                    //         )
-                    //       ],
-                    //     ),
-                    //     Row(
-                    //       children: [
-                    //         Card(
-                    //           shape: const RoundedRectangleBorder(
-                    //               borderRadius:
-                    //                   BorderRadius.all(Radius.circular(25))),
-                    //           child: IconButton(
-                    //               tooltip: 'Edit',
-                    //               onPressed: () {
-                    //                 updater(context, data);
-                    //               },
-                    //               icon: const Icon(
-                    //                 Icons.edit,
-                    //                 color: Colors.black,
-                    //               )),
-                    //         ),
-                    //         const SizedBox(
-                    //           width: 10,
-                    //         ),
-                    //         Card(
-                    //           shape: const RoundedRectangleBorder(
-                    //               borderRadius:
-                    //                   BorderRadius.all(Radius.circular(25))),
-                    //           child: IconButton(
-                    //               tooltip: 'Delete',
-                    //               onPressed: () {
-                    //                 deleteRow(ctx, data.admno);
-                    //               },
-                    //               icon: const Icon(
-                    //                 Icons.delete,
-                    //                 color: Colors.red,
-                    //               )),
-                    //         )
-                    //       ],
-                    //     )
-                    //   ],
-                    // ),
                   ),
                 );
               },
@@ -112,17 +60,17 @@ class ListStudentWidget extends StatelessWidget {
                   color: Colors.red,
                 );
               },
-              itemCount: studentList.length);
+              itemCount: studentProvider.studentList.length);
         } else {
           return GridView.builder(
-              itemCount: studentList.length,
+              itemCount: studentProvider.studentList.length,
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 165,
                   mainAxisExtent: 211,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10),
               itemBuilder: (ctx, index) {
-                final data = studentList[index];
+                final data = studentProvider.studentList[index];
                 return InkResponse(
                   onTap: () async {
                     StudentModel student = await getThisStudent(data.admno);
@@ -160,14 +108,12 @@ class ListStudentWidget extends StatelessWidget {
                                     Padding(
                                       padding:
                                           const EdgeInsets.only(left: 12.0),
-                                      child: Expanded(
-                                        child: Text(
-                                          'Name: ${data.name}',
-                                          style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700),
-                                        ),
+                                      child: Text(
+                                        'Name: ${data.name}',
+                                        style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700),
                                       ),
                                     ),
                                   ],
@@ -177,45 +123,6 @@ class ListStudentWidget extends StatelessWidget {
                             const SizedBox(
                               height: 13,
                             ),
-                            // Padding(
-                            //   padding: const EdgeInsets.only(right: 10.0),
-                            //   child: Row(
-                            //     mainAxisAlignment: MainAxisAlignment.end,
-                            //     children: [
-                            //       Card(
-                            //         shape: const RoundedRectangleBorder(
-                            //             borderRadius: BorderRadius.all(
-                            //                 Radius.circular(25))),
-                            //         child: IconButton(
-                            //             tooltip: 'Edit',
-                            //             onPressed: () {
-                            //               updater(context, data);
-                            //             },
-                            //             icon: const Icon(
-                            //               Icons.edit,
-                            //               color: Colors.black,
-                            //             )),
-                            //       ),
-                            //       const SizedBox(
-                            //         width: 5,
-                            //       ),
-                            //       Card(
-                            //         shape: const RoundedRectangleBorder(
-                            //             borderRadius: BorderRadius.all(
-                            //                 Radius.circular(25))),
-                            //         child: IconButton(
-                            //             tooltip: 'Delete',
-                            //             onPressed: () {
-                            //               deleteRow(ctx, data.admno);
-                            //             },
-                            //             icon: const Icon(
-                            //               Icons.delete,
-                            //               color: Colors.red,
-                            //             )),
-                            //       ),
-                            //     ],
-                            //   ),
-                            // )
                           ],
                         ),
                       ),
@@ -339,15 +246,18 @@ void updater(BuildContext context, StudentModel data) {
                     ElevatedButton.icon(
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            updateField(
+                            Navigator.pop(ctx);
+                            Navigator.pop(context);
+                            await updateField(
                                 admno: data.admno,
                                 name: _newNameController.text.trim(),
                                 age: _newAgeController.text.trim(),
                                 classInSchool: _newClassController.text.trim(),
                                 image64bit: byte64String);
-                            getAllStudents();
-                            Navigator.pop(ctx);
-                            Navigator.pop(context);
+
+                            await Provider.of<StudentProvider>(context,
+                                    listen: false)
+                                .getAllStudents();
 
                             StudentModel student =
                                 await getThisStudent(data.admno);

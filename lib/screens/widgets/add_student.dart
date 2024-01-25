@@ -1,7 +1,9 @@
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:sql/db/functions/db_functions.dart';
 import 'package:sql/db/model/data_model.dart';
 import 'package:flutter/material.dart';
+import 'package:sql/provider/db_list_provider.dart';
 
 String? byte64String;
 
@@ -119,14 +121,17 @@ class AddStudentWidget extends StatelessWidget {
                 ElevatedButton.icon(
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        onAddStudentButtonClicked();
+                        await onAddStudentButtonClicked();
+                        await Provider.of<StudentProvider>(context,
+                                listen: false)
+                            .getAllStudents();
                       }
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Add Student')),
-                const SizedBox(
-                  width: 50,
-                ),
+                // const SizedBox(
+                //   width: 50,
+                // ),
                 // ElevatedButton.icon(
                 //     onPressed: () {
                 //       dropTable();
@@ -160,7 +165,7 @@ class AddStudentWidget extends StatelessWidget {
         age: _age,
         classInSchool: _classInSchool,
         image64bit: _image);
-    addStudent(_student);
+    await addStudent(_student);
     _admnoController.clear();
     _nameController.clear();
     _classController.clear();
